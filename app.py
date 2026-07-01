@@ -48,10 +48,11 @@ st.markdown("""
         text-align: center;
         margin-top: 1.5rem;
     }
-    .result-rain   { background: #0a2540; border: 1px solid #1e6cb8; }
-    .result-norain { background: #0a2014; border: 1px solid #1a6b3a; }
-    .result-box h2 { font-size: 2rem; margin: 0; }
-    .result-box p  { margin: .5rem 0 0; font-size: 1rem; }
+    .result-rain   { background: #0a2540; border: 2px solid #4a90d9; }
+    .result-norain { background: #0a2014; border: 2px solid #2ecc71; }
+    .result-box h2 { font-size: 2rem; margin: 0; color: #ffffff; }
+    .result-box p  { margin: .5rem 0 0; font-size: 1.15rem; color: #e0e0e0; font-weight: 500; }
+    .result-box strong { color: #ffffff; font-size: 1.4rem; font-weight: 700; }
 
     div[data-testid="stButton"] > button {
         background: linear-gradient(90deg, #1565c0, #1e88e5);
