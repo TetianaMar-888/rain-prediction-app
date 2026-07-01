@@ -182,13 +182,21 @@ if st.button("🔍 Predict tomorrow's rain"):
     }])
 
     # Preprocessing
-    raw[numeric_cols] = imputer.transform(raw[numeric_cols])
-    raw[numeric_cols] = scaler.transform(raw[numeric_cols])
+    raw_numeric = raw[numeric_cols].copy()
+    raw_numeric = pd.DataFrame(
+        imputer.transform(raw_numeric),
+        columns=numeric_cols
+    )
+    raw_numeric = pd.DataFrame(
+        scaler.transform(raw_numeric),
+        columns=numeric_cols
+    )
 
-    encoded = encoder.transform(raw[cat_cols])
+    raw_cat = raw[cat_cols].copy()
+    encoded = encoder.transform(raw_cat)
     enc_df  = pd.DataFrame(encoded, columns=encoded_cols)
 
-    X = pd.concat([raw[numeric_cols].reset_index(drop=True), enc_df], axis=1)
+    X = pd.concat([raw_numeric.reset_index(drop=True), enc_df.reset_index(drop=True)], axis=1)
 
     pred  = model.predict(X)[0]
     proba = model.predict_proba(X)[0]
