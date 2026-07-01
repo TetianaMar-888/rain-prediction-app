@@ -74,17 +74,18 @@ st.markdown("""
 # ── Load model ─────────────────────────────────────────────────────────────────
 @st.cache_resource
 def load_model():
-    return joblib.load("aussie_rain.joblib")
+    return joblib.load("aussie_rain.joblib")   # ← шлях до файлу в репо
 
 try:
     bundle = load_model()
 except FileNotFoundError:
-    st.error("❌ Файл `aussie_rain.joblib` не знайдено.")
+    st.error("❌ Файл `aussie_rain.joblib` не знайдено. Переконайся, що він лежить поруч з `app.py`.")
     st.stop()
 
 model        = bundle["model"]
 imputer      = bundle["imputer"]
 scaler       = bundle["scaler"]
+encoder      = bundle["encoder"]
 numeric_cols = bundle["numeric_cols"]
 cat_cols     = bundle["categorical_cols"]
 encoded_cols = bundle["encoded_cols"]
@@ -98,46 +99,53 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Location options
 locations = [c.replace("Location_", "") for c in encoded_cols if c.startswith("Location_")]
 wind_dirs = [c.replace("WindGustDir_", "") for c in encoded_cols
              if c.startswith("WindGustDir_") and c != "WindGustDir_nan"]
 wind_dirs_with_na = ["(not observed)"] + wind_dirs
 
+# ── Section: Location ──────────────────────────────────────────────────────────
 st.markdown('<div class="section-label">📍 Location</div>', unsafe_allow_html=True)
 location = st.selectbox("Weather station", locations, label_visibility="collapsed")
 
+# ── Section: Temperature ───────────────────────────────────────────────────────
 st.markdown('<div class="section-label">🌡️ Temperature (°C)</div>', unsafe_allow_html=True)
 c1, c2, c3, c4 = st.columns(4)
-min_temp  = c1.number_input("Min Temp",  value=12.0, step=0.5)
-max_temp  = c2.number_input("Max Temp",  value=24.0, step=0.5)
-temp_9am  = c3.number_input("Temp 9am",  value=16.0, step=0.5)
-temp_3pm  = c4.number_input("Temp 3pm",  value=22.0, step=0.5)
+min_temp  = c1.number_input("Min Temp",   value=12.0, step=0.5)
+max_temp  = c2.number_input("Max Temp",   value=24.0, step=0.5)
+temp_9am  = c3.number_input("Temp 9am",   value=16.0, step=0.5)
+temp_3pm  = c4.number_input("Temp 3pm",   value=22.0, step=0.5)
 
+# ── Section: Rain & Evaporation ────────────────────────────────────────────────
 st.markdown('<div class="section-label">💧 Rain & Evaporation</div>', unsafe_allow_html=True)
 c1, c2, c3 = st.columns(3)
-rainfall    = c1.number_input("Rainfall (mm)",    value=0.0, step=0.1, min_value=0.0)
-evaporation = c2.number_input("Evaporation (mm)", value=4.8, step=0.1, min_value=0.0)
-sunshine    = c3.number_input("Sunshine (hrs)",   value=7.0, step=0.1, min_value=0.0, max_value=14.0)
+rainfall    = c1.number_input("Rainfall (mm)",     value=0.0,  step=0.1, min_value=0.0)
+evaporation = c2.number_input("Evaporation (mm)",  value=4.8,  step=0.1, min_value=0.0)
+sunshine    = c3.number_input("Sunshine (hrs)",    value=7.0,  step=0.1, min_value=0.0, max_value=14.0)
 rain_today  = st.radio("Did it rain today?", ["No", "Yes"], horizontal=True)
 
+# ── Section: Wind ──────────────────────────────────────────────────────────────
 st.markdown('<div class="section-label">💨 Wind</div>', unsafe_allow_html=True)
 c1, c2, c3 = st.columns(3)
-wind_gust_dir = c1.selectbox("Gust direction",  wind_dirs_with_na)
-wind_dir_9am  = c2.selectbox("Wind dir at 9am", wind_dirs_with_na)
-wind_dir_3pm  = c3.selectbox("Wind dir at 3pm", wind_dirs_with_na)
+wind_gust_dir = c1.selectbox("Gust direction",    wind_dirs_with_na)
+wind_dir_9am  = c2.selectbox("Wind dir at 9am",   wind_dirs_with_na)
+wind_dir_3pm  = c3.selectbox("Wind dir at 3pm",   wind_dirs_with_na)
 
 c1, c2, c3 = st.columns(3)
 wind_gust_speed = c1.number_input("Gust speed (km/h)", value=35.0, step=1.0, min_value=0.0)
 wind_speed_9am  = c2.number_input("Wind speed 9am",    value=14.0, step=1.0, min_value=0.0)
 wind_speed_3pm  = c3.number_input("Wind speed 3pm",    value=20.0, step=1.0, min_value=0.0)
 
+# ── Section: Humidity & Pressure ──────────────────────────────────────────────
 st.markdown('<div class="section-label">🔵 Humidity & Pressure</div>', unsafe_allow_html=True)
 c1, c2, c3, c4 = st.columns(4)
-humidity_9am = c1.slider("Humidity 9am (%)", 0, 100, 70)
-humidity_3pm = c2.slider("Humidity 3pm (%)", 0, 100, 55)
-pressure_9am = c3.number_input("Pressure 9am (hPa)", value=1017.0, step=0.1)
-pressure_3pm = c4.number_input("Pressure 3pm (hPa)", value=1015.0, step=0.1)
+humidity_9am  = c1.slider("Humidity 9am (%)",  0, 100, 70)
+humidity_3pm  = c2.slider("Humidity 3pm (%)",  0, 100, 55)
+pressure_9am  = c3.number_input("Pressure 9am (hPa)", value=1017.0, step=0.1)
+pressure_3pm  = c4.number_input("Pressure 3pm (hPa)", value=1015.0, step=0.1)
 
+# ── Section: Cloud ────────────────────────────────────────────────────────────
 st.markdown('<div class="section-label">☁️ Cloud cover (oktas 0–8)</div>', unsafe_allow_html=True)
 c1, c2 = st.columns(2)
 cloud_9am = c1.slider("Cloud 9am", 0, 8, 4)
@@ -145,41 +153,46 @@ cloud_3pm = c2.slider("Cloud 3pm", 0, 8, 5)
 
 # ── Predict ────────────────────────────────────────────────────────────────────
 def map_dir(val):
-    return None if val == "(not observed)" else val
+    return np.nan if val == "(not observed)" else val
 
 if st.button("🔍 Predict tomorrow's rain"):
 
     raw = pd.DataFrame([{
-        "Location":      location,
-        "MinTemp":       min_temp,
-        "MaxTemp":       max_temp,
-        "Rainfall":      rainfall,
-        "Evaporation":   evaporation,
-        "Sunshine":      sunshine,
-        "WindGustDir":   map_dir(wind_gust_dir),
-        "WindGustSpeed": wind_gust_speed,
-        "WindDir9am":    map_dir(wind_dir_9am),
-        "WindDir3pm":    map_dir(wind_dir_3pm),
-        "WindSpeed9am":  wind_speed_9am,
-        "WindSpeed3pm":  wind_speed_3pm,
-        "Humidity9am":   humidity_9am,
-        "Humidity3pm":   humidity_3pm,
-        "Pressure9am":   pressure_9am,
-        "Pressure3pm":   pressure_3pm,
-        "Cloud9am":      cloud_9am,
-        "Cloud3pm":      cloud_3pm,
-        "Temp9am":       temp_9am,
-        "Temp3pm":       temp_3pm,
-        "RainToday":     rain_today,
+        "Location":       location,
+        "MinTemp":        min_temp,
+        "MaxTemp":        max_temp,
+        "Rainfall":       rainfall,
+        "Evaporation":    evaporation,
+        "Sunshine":       sunshine,
+        "WindGustDir":    map_dir(wind_gust_dir),
+        "WindGustSpeed":  wind_gust_speed,
+        "WindDir9am":     map_dir(wind_dir_9am),
+        "WindDir3pm":     map_dir(wind_dir_3pm),
+        "WindSpeed9am":   wind_speed_9am,
+        "WindSpeed3pm":   wind_speed_3pm,
+        "Humidity9am":    humidity_9am,
+        "Humidity3pm":    humidity_3pm,
+        "Pressure9am":    pressure_9am,
+        "Pressure3pm":    pressure_3pm,
+        "Cloud9am":       cloud_9am,
+        "Cloud3pm":       cloud_3pm,
+        "Temp9am":        temp_9am,
+        "Temp3pm":        temp_3pm,
+        "RainToday":      rain_today,
     }])
 
-    # 1. Impute + scale числові
-    num_data = raw[numeric_cols].astype(float)
-    num_imputed = imputer.transform(num_data)
-    num_scaled  = scaler.transform(num_imputed)
-    num_df = pd.DataFrame(num_scaled, columns=numeric_cols)
+    # Preprocessing
+    raw_numeric = raw[numeric_cols].copy()
+    raw_numeric = pd.DataFrame(
+        imputer.transform(raw_numeric),
+        columns=numeric_cols
+    )
+    raw_numeric = pd.DataFrame(
+        scaler.transform(raw_numeric),
+        columns=numeric_cols
+    )
 
-    # 2. OHE вручну — без encoder.transform (уникаємо конфлікту версій sklearn)
+    # OHE вручну — без encoder.transform
     enc_df = pd.DataFrame(0.0, index=[0], columns=encoded_cols)
     for col in cat_cols:
         val = raw[col].iloc[0]
@@ -187,11 +200,11 @@ if st.button("🔍 Predict tomorrow's rain"):
         if col_name in enc_df.columns:
             enc_df[col_name] = 1.0
 
-    X = pd.concat([num_df.reset_index(drop=True), enc_df.reset_index(drop=True)], axis=1)
+    X = pd.concat([raw_numeric.reset_index(drop=True), enc_df.reset_index(drop=True)], axis=1)
 
     pred  = model.predict(X)[0]
     proba = model.predict_proba(X)[0]
-    rain_prob    = proba[1] * 100
+    rain_prob   = proba[1] * 100
     no_rain_prob = proba[0] * 100
 
     if pred == "Yes" or pred == 1:
