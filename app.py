@@ -95,7 +95,7 @@ input_cols   = bundle["input_cols"]
 st.markdown("""
 <div class="hero">
   <h1>🌧️ Rain Tomorrow?</h1>
-  <p>Forecast for Australia · Logistic Regression model trained on 10 years of weather data</p>
+  <p>Enter weather data to find out if it will rain tomorrow</p>
 </div>
 """, unsafe_allow_html=True)
 
